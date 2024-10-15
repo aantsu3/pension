@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>年金シミュレーター</title>
+    <script src="https://unpkg.com/alpinejs" defer></script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp,container-queries"></script>
+    <link href="./style/style.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+</head>
+<body x-data="{ 
+    country: '',
+    countriesData: {
+        '日本': { age: 65, pension: 150000, currency: 'YEN'},
+        'マレーシア': { age: 60, pension: 8300, currency: 'RM', rate: 34.09 },
+        'ロシア': { age: { men: 63, women: 58 }, pension: 20000, currency: 'RUB', rate: 1.86 },
+    },
+    navigateToResult: function() {
+        localStorage.setItem('selectedCountry', this.country);
+        window.location.href = 'loading.html';
+    }
+}" x-init="country = Object.keys(countriesData)[0]" class="flex items-center justify-center h-full">
+    <!-- Country Selector -->
+    <div class="flex flex-col w-3/4 gap-4 mx-auto">
+        <label class= "mx-auto text-4xl" for="country">
+            年金知りたい国を選んで！
+        </label>
+        <select x-model="country" class="textbox" id="country">
+            <template x-for="(data, name) in countriesData" :key="name">
+                <option :value="name" x-text="name"></option>
+            </template>
+        </select>
+        <button @click="navigateToResult" class="btn" id="offcanvasbtn">
+            OK
+        </button>
+    </div>    
+    </div>
+</body>
+</html>

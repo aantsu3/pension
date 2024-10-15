@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>年金シミュレーター結果</title>
+    <script src="https://unpkg.com/alpinejs" defer></script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp,container-queries"></script>
+    <link href="./style/style.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+</head>
+<body x-data="{ 
+    country: '',
+    countriesData: {
+        '日本': { age: 65, pension: 150000, currency: 'YEN'},
+        'マレーシア': { age: 60, pension: 8300, currency: 'RM', rate: 34.09 },
+        'ロシア': { age: { men: 63, women: 58 }, pension: 20000, currency: 'RUB', rate: 1.86 },
+    },
+
+    <!-- 全地球の国も入れたかったが、多すぎるのでとりあえず三つだけにしたんだ -->
+    <!-- あとは他の国の通貨を日本円に為替レート(Googleとかの)をリアルタイムでやりたかったが、やり方よくわかんなくて、countriesDataにrateを入れました -->
+
+    formatMoney: function(money) {
+        return money.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    },
+    getPensionData: function() {
+        const data = this.countriesData[this.country] || { age: 'N/A', pension: 'N/A', currency: '', rate: 0 };
+        const age = typeof data.age === 'object' ? `${data.age.women}(女) ${data.age.men}(男)` : data.age;
+        const pensionInYen = this.country === '日本' ? data.pension : this.convertToYen(data.pension, data.rate);
+        return { 
+            age: age, 
+            pension: data.pension, 
+            currency: data.currency,
+            pensionInYen: pensionInYen
+        };
+    },
+    convertToYen: function(pension, rate) {
+        if (pension === 'N/A' || rate === 0) return 'N/A';
+        return this.formatMoney(Math.round(pension * rate));
+    },
+    facts: [
+        'オランダは、年金をもらうには最適な国らしいです',
+        'ポルトガルでは男性の年金をもらえる年齢は世界一高いです、ほぼ69歳です！',
+        '中国、モンゴル、ウズベキスタンでは女性の年金をもらえる年齢は一番低いです、55歳です'
+    ],
+    currentFact: '',
+    getRandomFact: function() {
+        this.currentFact = this.facts[Math.floor(Math.random() * this.facts.length)];
+    }
+}" x-init="country = localStorage.getItem('selectedCountry'); getRandomFact()">
+    <!-- Results -->
+    <div class="w-3/4 mx-auto mt-8">
+        <p class="flex items-end justify-between">
+            <span class="text-xl">年金を貰える年齢:</span> 
+            <span class="text-[32px]" x-text="getPensionData().age"></span>歳
+        </p>
+        <p class="flex items-end justify-between">
+            <span class="text-xl">平均年金受給額(/月):</span>
+            <span class="text-[32px] mx-auto" x-text="formatMoney(getPensionData().pension) + ' ' + getPensionData().currency"></span>
+            <span class="text-[20px] ml-2" x-show="country !== '日本'">(<span x-text="getPensionData().pensionInYen"></span> YEN)</span>
+        </p>
+        <div class="w-full mt-8 text-center">
+            <p class="text-xl">年金のこと:</p>
+            <p class="mt-4 text-lg" x-text="currentFact"></p>
+        </div>
+        <div class="w-full mx-auto mt-8 text-center">
+            <button @click="window.location.href = 'best.html'" class="mb-4 btn" id="offcanvasbtn">
+                最適な国も見つけたい
+            </button>
+            <button @click="window.location.href = 'index.html'" class="mb-4 btn" id="offcanvasbtn">
+                別の国も見てみたい
+            </button>
+        </div>
+    </div>
+</body>
+</html>

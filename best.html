@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>年金シミュレーター</title>
+    <script src="https://unpkg.com/alpinejs" defer></script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp,container-queries"></script>
+    <link href="./style/style.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+</head>
+<body x-data="{ 
+    preferredAge: '',
+    preferredPension: '',
+    formattedPension: '',
+    bestMatch: '',
+    countriesData: {
+        '日本': { age: 65, pension: 150000, currency: 'YEN'},
+        'マレーシア': { age: 60, pension: 8300, currency: 'RM', rate: 34.09 },
+        'ロシア': { age: { men: 63, women: 58 }, pension: 20000, currency: 'RUB', rate: 1.86 },
+    },
+    getPensionInCurrency: function(pensionInYen, rate) {
+        return rate ? pensionInYen / rate : pensionInYen;
+    },
+    formatPension: function(pension) {
+
+        return pension.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+    },
+    findBestMatch: function() {
+        const age = parseInt(this.preferredAge);
+        const preferredPension = parseInt(this.preferredPension.replace(/,/g, ''));
+        let bestCountry = '';
+        let minPensionDifference = Infinity;
+        let minAgeDifference = Infinity;
+
+        for (const [country, data] of Object.entries(this.countriesData)) {
+            const countryAge = typeof data.age === 'object' ? Math.min(data.age.men, data.age.women) : data.age;
+            const pensionInCountryCurrency = this.getPensionInCurrency(preferredPension, data.rate);
+            const pensionDifference = Math.abs(data.pension - pensionInCountryCurrency);
+            const ageDifference = Math.abs(countryAge - age);
+
+            if (pensionDifference < minPensionDifference || (pensionDifference === minPensionDifference && ageDifference < minAgeDifference)) {
+                bestCountry = country;
+                minPensionDifference = pensionDifference;
+                minAgeDifference = ageDifference;
+            }
+        }
+
+        this.bestMatch = bestCountry;
+        localStorage.setItem('selectedCountry', bestCountry);
+    }
+}">
+    <!-- User Input -->
+    <div class="w-3/4 mx-auto mt-8 text-center">
+        <div class="mb-4">
+            <label for="preferredAge" class="block mb-2 text-xl">希望の年金を貰える年齢:</label>
+            <input type="number" id="preferredAge" x-model="preferredAge" class="w-2/4 rounded-full textbox" >
+        </div>
+        <div class="mb-4">
+            <label for="preferredPension" class="block mb-2 text-xl">希望の年金受給額(/月 YEN):</label>
+            <input type="text" id="preferredPension" x-model="formattedPension" @input="preferredPension = $event.target.value.replace(/,/g, ''); formattedPension = formatPension(preferredPension)" class="w-2/4 rounded-full textbox">
+        </div>
+        <div x-show="bestMatch" class="mt-4">
+            <p class="text-xl">最適な国:</p>
+            <p class="text-2xl" x-text="bestMatch"></p>
+        </div>
+        <button @click="window.location.href = 'result.html'" class="mb-4 btn" id="offcanvasbtn">
+            その国の年金を詳しく見る
+        </button>
+        <button @click="findBestMatch" class="btn" id="offcanvasbtn">最適な国を見つける</button>
+
+    </div>
+</body>
+</html>
